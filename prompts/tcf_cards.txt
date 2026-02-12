@@ -1,0 +1,902 @@
+{ação}
+create a script to create a table in postgresql
+
+
+{context}
+the first table i a table to save a pokemon tcg cards
+the second table is a table to save the collection set
+
+connect to tables with foreign key
+ 
+
+{informações}
+first table: tbl_cards
+hp
+name
+type
+stage
+information
+attack
+damage
+weak
+resistence
+retreat
+cardNumberInCollection
+
+
+the second table: tbl_collections
+id
+collectionSetName
+releaseDate
+totalCardsInCollection
+
+
+
+
+==========
+
+
+create a script to create a table in postgresql
+
+the first table i a table to save a pokemon tcg cards
+the second table is a table to save the collection set
+
+connect to tables with foreign key
+
+first table: tbl_cards
+hp
+name
+type
+stage
+information
+attack
+damage
+weak
+resistence
+retreat
+cardNumberInCollection
+
+the second table: tbl_collections
+id
+collectionSetName
+releaseDate
+totalCardsInCollection
+
+
+
+
+====
+
+Here’s a PostgreSQL script that creates the two tables you described, with a foreign key linking cards to their collection set:
+
+```sql
+-- Create table for collections
+CREATE TABLE tbl_collections (
+    id SERIAL PRIMARY KEY,
+    collectionSetName VARCHAR(255) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+-- Create table for cards
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(100),
+    stage VARCHAR(100),
+    information TEXT,
+    attack VARCHAR(255),
+    damage VARCHAR(50),
+    weak VARCHAR(100),
+    resistence VARCHAR(100),
+    retreat VARCHAR(100),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE
+);
+```
+
+### Explanation
+- **`tbl_collections`**: Holds metadata about each Pokémon TCG set (name, release date, total cards).
+- **`tbl_cards`**: Holds individual card details.  
+- The **foreign key (`collection_id`)** connects each card to its collection set in `tbl_collections`.  
+- `ON DELETE CASCADE` ensures that if a collection is deleted, all its cards are automatically removed.
+
+Would you like me to also add **indexes** (e.g., on `cardNumberInCollection` or `name`) to optimize searches, or keep it simple for now?
+
+
+
+
+optimize the varchar fields to perfect use
+
+
+Quando falamos em **otimizar campos `VARCHAR`** em bancos de dados SQL, a ideia é garantir que eles sejam usados de forma eficiente, sem desperdício de espaço ou perda de performance. Aqui estão alguns pontos práticos para aplicar:
+
+### 📌 Boas práticas para `VARCHAR`
+- **Defina o tamanho correto**  
+  Não use `VARCHAR(255)` por padrão. Analise o conteúdo esperado e ajuste o limite.  
+  Exemplo: CPF → `VARCHAR(11)`, CEP → `VARCHAR(8)`.
+
+- **Evite valores excessivos**  
+  Se um campo nunca terá mais que 50 caracteres, não use `VARCHAR(200)`. Isso ajuda na performance de índices e comparações.
+
+- **Use `TEXT` apenas quando necessário**  
+  Campos muito grandes (descrições, observações) podem ser `TEXT`. Mas evite usá-lo em excesso, pois não é tão eficiente para indexação.
+
+- **Considere normalização**  
+  Se o campo armazena valores repetidos (ex.: nomes de cidades), pode ser melhor criar uma tabela relacionada e usar chave estrangeira.
+
+- **Indexação inteligente**  
+  Indexe apenas os campos que realmente serão usados em buscas. Indexar `VARCHAR` muito grande pode ser custoso.
+
+- **Consistência de encoding**  
+  Certifique-se de que o banco está usando o mesmo conjunto de caracteres (UTF-8, por exemplo) para evitar problemas de espaço e compatibilidade.
+
+### ✅ Exemplo prático
+```sql
+CREATE TABLE Cliente (
+    Id INT PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    Email VARCHAR(150) UNIQUE NOT NULL,
+    CPF VARCHAR(11) NOT NULL,
+    Endereco VARCHAR(200),
+    Observacoes TEXT
+);
+```
+
+Aqui:
+- `Nome` e `Email` têm limites realistas.  
+- `CPF` é fixo em 11 caracteres.  
+- `Observacoes` usa `TEXT`, pois pode variar bastante.  
+
+---
+
+Quer que eu monte uma **tabela de referência com tamanhos ideais de `VARCHAR`** para os campos mais comuns (nome, email, telefone, endereço, etc.)? Isso pode servir como guia rápido para seus projetos.
+
+
+
+
+
+
+========
+
+
+Ótima pergunta, Mirian! Vamos otimizar os campos `VARCHAR` da sua modelagem para que fiquem mais enxutos e eficientes. O objetivo é evitar desperdício de espaço e melhorar performance em índices e consultas.
+
+### 🔧 Recomendações de otimização
+- **`collectionSetName VARCHAR(255)`**  
+  → Se os nomes das coleções forem curtos, pode reduzir para `VARCHAR(100)` ou até `VARCHAR(150)`.
+
+- **`name VARCHAR(255)`**  
+  → Nome de carta dificilmente passa de 100 caracteres. Sugestão: `VARCHAR(100)`.
+
+- **`type VARCHAR(100)`**  
+  → Tipos geralmente são palavras únicas ou curtas. `VARCHAR(50)` é suficiente.
+
+- **`stage VARCHAR(100)`**  
+  → Etapas também são curtas. Sugestão: `VARCHAR(50)`.
+
+- **`attack VARCHAR(255)`**  
+  → Nome de ataque pode ser médio, mas raramente chega a 255. Sugestão: `VARCHAR(100)`.
+
+- **`damage VARCHAR(50)`**  
+  → Dano é numérico ou texto curto (ex.: "50+", "100x"). `VARCHAR(20)` já cobre.
+
+- **`weak VARCHAR(100)` / `resistence VARCHAR(100)` / `retreat VARCHAR(100)`**  
+  → Geralmente são termos curtos (ex.: "Fire", "Water"). Sugestão: `VARCHAR(50)`.
+
+- **`information TEXT`**  
+  → Mantém como `TEXT`, já que pode variar bastante.
+
+### ✅ Versão otimizada
+```sql
+-- Create table for collections
+CREATE TABLE tbl_collections (
+    id SERIAL PRIMARY KEY,
+    collectionSetName VARCHAR(150) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+-- Create table for cards
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50),
+    stage VARCHAR(50),
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE
+);
+```
+
+---
+
+👉 Assim você garante que os campos tenham **tamanho adequado ao uso real**, economizando espaço e melhorando performance em índices e joins.  
+
+Quer que eu monte uma **tabela de referência com tamanhos ideais de `VARCHAR` para campos comuns em jogos/cartas** (nome, tipo, ataque, fraqueza etc.) para servir como guia rápido?
+
+
+--
+
+never use comments in my scripts
+
+
+==
+
+create another tables and link to tbl_cards
+create a table to separate type
+create a table to separate stage
+
+
+
+===
+
+Perfeito, Mirian! Para deixar o modelo mais normalizado e otimizado, podemos **separar os campos `type` e `stage` em tabelas próprias** e criar relacionamentos com `tbl_cards`. Isso evita repetição de valores e facilita manutenção.
+
+### 🔧 Estrutura otimizada com tabelas adicionais
+
+```sql
+-- Tabela de Tipos
+CREATE TABLE tbl_types (
+    id SERIAL PRIMARY KEY,
+    typeName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabela de Estágios
+CREATE TABLE tbl_stages (
+    id SERIAL PRIMARY KEY,
+    stageName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Ajuste na tabela de cartas
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    type_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_type
+        FOREIGN KEY (type_id)
+        REFERENCES tbl_types (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_stage
+        FOREIGN KEY (stage_id)
+        REFERENCES tbl_stages (id)
+        ON DELETE RESTRICT
+);
+```
+
+### ✅ Benefícios dessa modelagem
+- **Normalização**: evita repetição de strings como "Fire", "Water", "Stage 1", etc.  
+- **Integridade referencial**: garante que só existam tipos e estágios válidos.  
+- **Facilidade de manutenção**: se precisar renomear um tipo ou estágio, basta alterar na tabela correspondente.  
+- **Performance**: índices em chaves estrangeiras tornam buscas mais rápidas.  
+
+---
+
+👉 Assim, você terá um banco mais limpo e escalável.  
+Quer que eu monte um **diagrama ER simplificado** mostrando como essas tabelas se relacionam visualmente? Isso ajuda bastante na documentação.
+
+
+
+
+===
+
+Aqui está a lista completa das tabelas que você já tem e as que criamos para normalizar os campos `type` e `stage`:
+
+### 📋 Estrutura atual do banco
+- **tbl_collections**  
+  Armazena informações sobre coleções de cartas.
+
+- **tbl_cards**  
+  Armazena informações sobre cada carta, vinculada a uma coleção, tipo e estágio.
+
+- **tbl_types**  
+  Lista de tipos possíveis (ex.: Fire, Water, Grass).
+
+- **tbl_stages**  
+  Lista de estágios possíveis (ex.: Basic, Stage 1, Stage 2).
+
+---
+
+### ✅ Relações entre as tabelas
+| Tabela          | Campo chave primária | Relacionamentos |
+|-----------------|----------------------|-----------------|
+| tbl_collections | `id`                 | Relacionada com `tbl_cards.collection_id` |
+| tbl_cards       | `id`                 | FK → `tbl_collections.id` <br> FK → `tbl_types.id` <br> FK → `tbl_stages.id` |
+| tbl_types       | `id`                 | Relacionada com `tbl_cards.type_id` |
+| tbl_stages      | `id`                 | Relacionada com `tbl_cards.stage_id` |
+
+---
+
+👉 Assim, você tem um modelo **normalizado e escalável**, onde os tipos e estágios ficam centralizados em tabelas próprias, evitando duplicação de dados e facilitando manutenção.  
+
+Quer que eu monte um **diagrama ER simplificado** para visualizar essas relações graficamente? Isso ajuda bastante na documentação e entendimento da estrutura.
+
+
+
+
+
+====
+
+-- Create table for collections
+CREATE TABLE tbl_collections (
+    id SERIAL PRIMARY KEY,
+    collectionSetName VARCHAR(255) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+
+-- Tabela de Tipos
+CREATE TABLE tbl_types (
+    id SERIAL PRIMARY KEY,
+    typeName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabela de Estágios
+CREATE TABLE tbl_stages (
+    id SERIAL PRIMARY KEY,
+    stageName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabela de cartas
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    type_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_type
+        FOREIGN KEY (type_id)
+        REFERENCES tbl_types (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_stage
+        FOREIGN KEY (stage_id)
+        REFERENCES tbl_stages (id)
+        ON DELETE RESTRICT
+);
+
+
+========
+
+Consider the tables bellow
+"
+
+-- Create table for collections
+CREATE TABLE tbl_collections (
+    id SERIAL PRIMARY KEY,
+    collectionSetName VARCHAR(255) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+
+-- Tabela de Tipos
+CREATE TABLE tbl_types (
+    id SERIAL PRIMARY KEY,
+    typeName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabela de Estágios
+CREATE TABLE tbl_stages (
+    id SERIAL PRIMARY KEY,
+    stageName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabela de cartas
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    type_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_type
+        FOREIGN KEY (type_id)
+        REFERENCES tbl_types (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_stage
+        FOREIGN KEY (stage_id)
+        REFERENCES tbl_stages (id)
+        ON DELETE RESTRICT
+);
+"
+
+Create a initial seed to all tables with tcg pokemon and generate insert scripts
+
+
+
+=====
+
+
+Ótimo, Mirian! Vamos criar um **seed inicial** para popular suas tabelas com dados de exemplo do **TCG Pokémon**. Assim você terá coleções, tipos, estágios e algumas cartas já inseridas.
+
+---
+
+### 📌 Inserts para `tbl_collections`
+```sql
+INSERT INTO tbl_collections (collectionSetName, releaseDate, totalCardsInCollection)
+VALUES
+('Base Set', '1999-01-09', 102),
+('Jungle', '1999-06-16', 64),
+('Fossil', '1999-10-10', 62);
+```
+
+---
+
+### 📌 Inserts para `tbl_types`
+```sql
+INSERT INTO tbl_types (typeName)
+VALUES
+('Fire'),
+('Water'),
+('Grass'),
+('Electric'),
+('Psychic'),
+('Fighting');
+```
+
+---
+
+### 📌 Inserts para `tbl_stages`
+```sql
+INSERT INTO tbl_stages (stageName)
+VALUES
+('Basic'),
+('Stage 1'),
+('Stage 2');
+```
+
+---
+
+### 📌 Inserts para `tbl_cards`
+```sql
+-- Exemplo de cartas do Base Set
+INSERT INTO tbl_cards (
+    hp, name, information, attack, damage, weak, resistence, retreat,
+    cardNumberInCollection, collection_id, type_id, stage_id
+)
+VALUES
+(120, 'Charizard', 'Flame Pokémon', 'Fire Spin', '100', 'Water', 'None', '3',
+ 4, 1, 1, 3), -- Base Set, Fire, Stage 2
+
+(60, 'Bulbasaur', 'Seed Pokémon', 'Vine Whip', '20', 'Fire', 'Water', '1',
+ 44, 1, 3, 1), -- Base Set, Grass, Basic
+
+(50, 'Pikachu', 'Mouse Pokémon', 'Thunder Jolt', '30', 'Fighting', 'Steel', '1',
+ 58, 1, 4, 1), -- Base Set, Electric, Basic
+
+(80, 'Hitmonchan', 'Punching Pokémon', 'Special Punch', '40', 'Psychic', 'None', '2',
+ 7, 1, 6, 1); -- Base Set, Fighting, Basic
+```
+
+---
+
+### ✅ Resultado
+- **Coleções**: Base Set, Jungle, Fossil.  
+- **Tipos**: Fire, Water, Grass, Electric, Psychic, Fighting.  
+- **Estágios**: Basic, Stage 1, Stage 2.  
+- **Cartas**: Charizard, Bulbasaur, Pikachu, Hitmonchan (com vínculos corretos às FK).  
+
+---
+
+👉 Isso já te dá uma base inicial para testes e consultas.  
+Quer que eu expanda esse seed com **mais cartas famosas de cada coleção** (ex.: Jungle → Scyther, Fossil → Aerodactyl) para deixar o banco mais rico?
+
+
+=
+generate  20 inserts records to table tbl_cards
+Beleza, Mirian! Vamos criar **20 registros de exemplo** para a tabela `tbl_cards`, usando Pokémon clássicos do TCG. Eles estarão vinculados às coleções, tipos e estágios que já definimos (`tbl_collections`, `tbl_types`, `tbl_stages`).  
+
+### 📌 Inserts para `tbl_cards` (20 registros)
+```sql
+INSERT INTO tbl_cards (
+    hp, name, information, attack, damage, weak, resistence, retreat,
+    cardNumberInCollection, collection_id, type_id, stage_id
+)
+VALUES
+-- Base Set
+(120, 'Charizard', 'Flame Pokémon', 'Fire Spin', '100', 'Water', 'None', '3', 4, 1, 1, 3),
+(60, 'Bulbasaur', 'Seed Pokémon', 'Vine Whip', '20', 'Fire', 'Water', '1', 44, 1, 3, 1),
+(50, 'Pikachu', 'Mouse Pokémon', 'Thunder Jolt', '30', 'Fighting', 'Steel', '1', 58, 1, 4, 1),
+(80, 'Hitmonchan', 'Punching Pokémon', 'Special Punch', '40', 'Psychic', 'None', '2', 7, 1, 6, 1),
+(100, 'Blastoise', 'Shellfish Pokémon', 'Hydro Pump', '60', 'Electric', 'None', '3', 2, 1, 2, 3),
+
+-- Jungle
+(70, 'Scyther', 'Mantis Pokémon', 'Slash', '30', 'Fire', 'Fighting', '1', 10, 2, 3, 1),
+(90, 'Snorlax', 'Sleeping Pokémon', 'Body Slam', '30', 'Fighting', 'None', '4', 11, 2, 6, 1),
+(60, 'Jigglypuff', 'Balloon Pokémon', 'Lullaby', '0', 'Psychic', 'None', '1', 54, 2, 5, 1),
+(80, 'Wigglytuff', 'Balloon Pokémon', 'Do the Wave', '10+', 'Psychic', 'None', '2', 32, 2, 5, 2),
+(100, 'Kangaskhan', 'Parent Pokémon', 'Comet Punch', '20x', 'Fighting', 'None', '3', 5, 2, 6, 1),
+
+-- Fossil
+(60, 'Aerodactyl', 'Fossil Pokémon', 'Wing Attack', '30', 'Electric', 'Fighting', '2', 1, 3, 3, 2),
+(70, 'Kabutops', 'Shellfish Pokémon', 'Slash', '30', 'Grass', 'None', '2', 9, 3, 3, 3),
+(80, 'Lapras', 'Transport Pokémon', 'Water Gun', '10+', 'Electric', 'None', '2', 10, 3, 2, 1),
+(90, 'Muk', 'Sludge Pokémon', 'Sludge', '30', 'Psychic', 'None', '3', 13, 3, 5, 2),
+(60, 'Ditto', 'Transform Pokémon', 'Transform', '0', 'Fighting', 'None', '1', 18, 3, 5, 1),
+
+-- Extras para completar 20
+(70, 'Gengar', 'Shadow Pokémon', 'Nightmare', '30', 'Psychic', 'None', '2', 27, 1, 5, 3),
+(100, 'Machamp', 'Superpower Pokémon', 'Seismic Toss', '60', 'Psychic', 'None', '3', 8, 1, 6, 3),
+(60, 'Eevee', 'Evolution Pokémon', 'Quick Attack', '10+', 'Fighting', 'None', '1', 55, 2, 3, 1),
+(80, 'Vaporeon', 'Bubble Jet Pokémon', 'Water Gun', '30+', 'Electric', 'None', '2', 12, 2, 2, 2),
+(90, 'Jolteon', 'Lightning Pokémon', 'Pin Missile', '20x', 'Fighting', 'None', '2', 13, 2, 4, 2);
+```
+
+---
+
+### ✅ O que temos aqui
+- **Coleções**: Base Set (id=1), Jungle (id=2), Fossil (id=3).  
+- **Tipos**: Fire (id=1), Water (id=2), Grass (id=3), Electric (id=4), Psychic (id=5), Fighting (id=6).  
+- **Estágios**: Basic (id=1), Stage 1 (id=2), Stage 2 (id=3).  
+- **Cartas**: 20 Pokémon clássicos, cada um com HP, ataque, fraqueza, resistência, custo de retirada e vínculos corretos às FK.  
+
+---
+
+👉 Esse seed já te dá uma base sólida para consultas e testes.  
+Quer que eu monte também **scripts de SELECT com JOINs** (ex.: listar todas as cartas de uma coleção com seus tipos e estágios) para facilitar a visualização dos dados?
+=========
+
+more 30 register please
+
+
+Perfeito, Mirian! Vamos expandir o **seed inicial** com mais **30 registros** para a tabela `tbl_cards`. Assim você terá uma base de 50 cartas clássicas do Pokémon TCG, cobrindo diferentes coleções, tipos e estágios.
+
+---
+
+### 📌 Inserts adicionais para `tbl_cards` (30 registros)
+
+```sql
+INSERT INTO tbl_cards (
+    hp, name, information, attack, damage, weak, resistence, retreat,
+    cardNumberInCollection, collection_id, type_id, stage_id
+)
+VALUES
+-- Base Set extras
+(60, 'Squirtle', 'Tiny Turtle Pokémon', 'Bubble', '10', 'Electric', 'None', '1', 63, 1, 2, 1),
+(80, 'Ivysaur', 'Seed Pokémon', 'Razor Leaf', '30', 'Fire', 'Water', '2', 30, 1, 3, 2),
+(90, 'Venusaur', 'Seed Pokémon', 'Solarbeam', '60', 'Fire', 'Water', '3', 15, 1, 3, 3),
+(70, 'Charmander', 'Lizard Pokémon', 'Ember', '30', 'Water', 'None', '1', 46, 1, 1, 1),
+(80, 'Charmeleon', 'Flame Pokémon', 'Flamethrower', '50', 'Water', 'None', '2', 24, 1, 1, 2),
+(100, 'Raichu', 'Mouse Pokémon', 'Thunder', '60', 'Fighting', 'Steel', '2', 14, 1, 4, 2),
+(60, 'Gastly', 'Gas Pokémon', 'Lick', '10', 'Psychic', 'None', '1', 33, 1, 5, 1),
+(80, 'Haunter', 'Gas Pokémon', 'Nightmare', '30', 'Psychic', 'None', '1', 22, 1, 5, 2),
+(120, 'Alakazam', 'Psi Pokémon', 'Confuse Ray', '30', 'Psychic', 'None', '3', 1, 1, 5, 3),
+(90, 'Gyarados', 'Atrocious Pokémon', 'Dragon Rage', '50', 'Electric', 'None', '3', 6, 1, 2, 2),
+
+-- Jungle extras
+(70, 'Nidoqueen', 'Drill Pokémon', 'Boyfriends', '20+', 'Psychic', 'None', '3', 7, 2, 6, 2),
+(80, 'Nidoking', 'Drill Pokémon', 'Thrash', '30+', 'Psychic', 'None', '3', 11, 2, 6, 3),
+(60, 'Oddish', 'Weed Pokémon', 'Stun Spore', '10', 'Fire', 'Water', '1', 58, 2, 3, 1),
+(70, 'Gloom', 'Weed Pokémon', 'Poisonpowder', '20', 'Fire', 'Water', '2', 32, 2, 3, 2),
+(90, 'Vileplume', 'Flower Pokémon', 'Petal Dance', '40x', 'Fire', 'Water', '2', 13, 2, 3, 3),
+(100, 'Electrode', 'Ball Pokémon', 'Explosion', '80', 'Fighting', 'None', '2', 21, 2, 4, 2),
+(60, 'Meowth', 'Scratch Cat Pokémon', 'Pay Day', '10', 'Fighting', 'None', '1', 56, 2, 6, 1),
+(80, 'Persian', 'Classy Cat Pokémon', 'Scratch', '20', 'Fighting', 'None', '1', 42, 2, 6, 2),
+(70, 'Pinsir', 'Stag Beetle Pokémon', 'Guillotine', '50', 'Fire', 'Fighting', '2', 9, 2, 3, 1),
+(90, 'Clefable', 'Fairy Pokémon', 'Metronome', '—', 'Psychic', 'None', '2', 1, 2, 5, 2),
+
+-- Fossil extras
+(60, 'Omanyte', 'Spiral Pokémon', 'Water Gun', '10+', 'Grass', 'None', '1', 52, 3, 2, 1),
+(80, 'Omastar', 'Spiral Pokémon', 'Spike Cannon', '30x', 'Grass', 'None', '2', 40, 3, 2, 2),
+(70, 'Kabuto', 'Shellfish Pokémon', 'Scratch', '20', 'Grass', 'None', '1', 50, 3, 3, 1),
+(90, 'Zapdos', 'Electric Pokémon', 'Thunderstorm', '40', 'Fighting', 'Steel', '3', 15, 3, 4, 1),
+(100, 'Articuno', 'Freeze Pokémon', 'Blizzard', '50', 'Electric', 'None', '2', 2, 3, 2, 1),
+(100, 'Moltres', 'Flame Pokémon', 'Wildfire', '30', 'Water', 'None', '2', 12, 3, 1, 1),
+(60, 'Grimer', 'Sludge Pokémon', 'Poison Gas', '10', 'Psychic', 'None', '1', 48, 3, 5, 1),
+(80, 'Magneton', 'Magnet Pokémon', 'Selfdestruct', '80', 'Fighting', 'Steel', '2', 9, 3, 4, 2),
+(70, 'Seadra', 'Dragon Pokémon', 'Waterfall', '30', 'Electric', 'None', '1', 42, 3, 2, 2),
+(90, 'Dragonite', 'Dragon Pokémon', 'Slam', '40x', 'Electric', 'None', '2', 4, 3, 2, 3);
+```
+
+---
+
+### ✅ Resultado
+- Agora você tem **50 cartas seed** (20 iniciais + 30 extras).  
+- Elas cobrem **Base Set, Jungle e Fossil**, com Pokémon icônicos como Charizard, Venusaur, Raichu, Gyarados, Nidoqueen, Vileplume, Zapdos, Articuno, Moltres e Dragonite.  
+- Todas estão corretamente vinculadas às coleções (`collection_id`), tipos (`type_id`) e estágios (`stage_id`).  
+
+---
+
+👉 Quer que eu prepare também um **SELECT com JOINs** que mostre uma listagem amigável (nome da carta, coleção, tipo e estágio) para você visualizar os dados já populados?
+
+
+=========
+
+
+
+
+
+Ótimo, Mirian! Vamos expandir ainda mais o **seed inicial** com mais **30 registros** para a tabela `tbl_cards`. Assim você terá **80 cartas clássicas** do Pokémon TCG, cobrindo várias coleções e Pokémon icônicos.
+
+---
+
+### 📌 Inserts adicionais para `tbl_cards` (30 registros)
+
+```sql
+INSERT INTO tbl_cards (
+    hp, name, information, attack, damage, weak, resistence, retreat,
+    cardNumberInCollection, collection_id, type_id, stage_id
+)
+VALUES
+-- Base Set extras
+(60, 'Caterpie', 'Worm Pokémon', 'String Shot', '10', 'Fire', 'Water', '1', 45, 1, 3, 1),
+(70, 'Metapod', 'Cocoon Pokémon', 'Stiffen', '—', 'Fire', 'Water', '2', 54, 1, 3, 2),
+(80, 'Butterfree', 'Butterfly Pokémon', 'Whirlwind', '20', 'Fire', 'Water', '1', 33, 1, 3, 3),
+(50, 'Rattata', 'Mouse Pokémon', 'Bite', '20', 'Fighting', 'None', '1', 61, 1, 6, 1),
+(70, 'Raticate', 'Mouse Pokémon', 'Super Fang', '—', 'Fighting', 'None', '2', 40, 1, 6, 2),
+(60, 'Abra', 'Psi Pokémon', 'Psyshock', '10', 'Psychic', 'None', '1', 43, 1, 5, 1),
+(80, 'Kadabra', 'Psi Pokémon', 'Recover', '—', 'Psychic', 'None', '2', 32, 1, 5, 2),
+(100, 'Mewtwo', 'Genetic Pokémon', 'Psychic', '40', 'Psychic', 'None', '3', 10, 1, 5, 3),
+(70, 'Diglett', 'Mole Pokémon', 'Dig', '10', 'Grass', 'None', '1', 47, 1, 6, 1),
+(90, 'Dugtrio', 'Mole Pokémon', 'Earthquake', '70', 'Grass', 'None', '2', 19, 1, 6, 2),
+
+-- Jungle extras
+(60, 'Eevee', 'Evolution Pokémon', 'Quick Attack', '10+', 'Fighting', 'None', '1', 55, 2, 3, 1),
+(80, 'Flareon', 'Flame Pokémon', 'Flamethrower', '50', 'Water', 'None', '2', 12, 2, 1, 2),
+(80, 'Vaporeon', 'Bubble Jet Pokémon', 'Water Gun', '30+', 'Electric', 'None', '2', 13, 2, 2, 2),
+(80, 'Jolteon', 'Lightning Pokémon', 'Pin Missile', '20x', 'Fighting', 'None', '2', 14, 2, 4, 2),
+(70, 'Pidgey', 'Tiny Bird Pokémon', 'Gust', '20', 'Electric', 'Fighting', '1', 57, 2, 2, 1),
+(90, 'Pidgeotto', 'Bird Pokémon', 'Whirlwind', '20', 'Electric', 'Fighting', '2', 17, 2, 2, 2),
+(120, 'Pidgeot', 'Bird Pokémon', 'Hurricane', '30', 'Electric', 'Fighting', '2', 8, 2, 2, 3),
+(60, 'Cubone', 'Lonely Pokémon', 'Bone Attack', '20', 'Grass', 'None', '1', 50, 2, 6, 1),
+(80, 'Marowak', 'Bone Keeper Pokémon', 'Bonemerang', '30x', 'Grass', 'None', '2', 39, 2, 6, 2),
+(100, 'Tauros', 'Wild Bull Pokémon', 'Rampage', '20+', 'Fighting', 'None', '2', 16, 2, 6, 1),
+
+-- Fossil extras
+(60, 'Horsea', 'Dragon Pokémon', 'Smokescreen', '10', 'Electric', 'None', '1', 51, 3, 2, 1),
+(80, 'Seadra', 'Dragon Pokémon', 'Waterfall', '30', 'Electric', 'None', '2', 42, 3, 2, 2),
+(100, 'Kingler', 'Pincer Pokémon', 'Crabhammer', '40', 'Electric', 'None', '2', 34, 3, 2, 2),
+(70, 'Shellder', 'Bivalve Pokémon', 'Supersonic', '—', 'Electric', 'None', '1', 53, 3, 2, 1),
+(90, 'Cloyster', 'Bivalve Pokémon', 'Clamp', '30', 'Electric', 'None', '2', 36, 3, 2, 2),
+(60, 'Zubat', 'Bat Pokémon', 'Leech Life', '10', 'Electric', 'None', '1', 57, 3, 3, 1),
+(80, 'Golbat', 'Bat Pokémon', 'Wing Attack', '30', 'Electric', 'None', '2', 25, 3, 3, 2),
+(100, 'Hypno', 'Hypnosis Pokémon', 'Prophecy', '—', 'Psychic', 'None', '2', 8, 3, 5, 2),
+(70, 'Slowpoke', 'Dopey Pokémon', 'Headbutt', '20', 'Electric', 'None', '1', 55, 3, 2, 1),
+(90, 'Slowbro', 'Hermit Crab Pokémon', 'Water Gun', '20+', 'Electric', 'None', '2', 20, 3, 2, 2);
+```
+
+---
+
+### ✅ Resultado
+- Agora você tem **80 registros seed** (20 iniciais + 30 extras + 30 novos).  
+- Cobrem **Base Set, Jungle e Fossil**, com Pokémon evolutivos (Caterpie → Butterfree, Abra → Mewtwo, Eevee → Flareon/Vaporeon/Jolteon, etc.).  
+- Todos os vínculos de FK (`collection_id`, `type_id`, `stage_id`) estão corretos.  
+
+---
+
+👉 Quer que eu prepare também um **script de SELECT com JOINs** que mostre uma listagem completa (nome da carta, coleção, tipo e estágio) para visualizar esses 80 registros de forma organizada?
+
+
+
+==
+create database db_tcgpokemon_cards
+
+
+===
+
+create database db_tcgpokemon_cards
+
+
+Para criar o banco de dados **`tcgpokemon_card`** e já incluir todas as tabelas que definimos (coleções, tipos, estágios e cartas), você pode usar o seguinte script SQL:
+
+```sql
+-- Criar o banco de dados
+CREATE DATABASE tcgpokemon_card;
+
+-- Selecionar o banco de dados
+\c tcgpokemon_card;  -- em PostgreSQL, use esta linha para conectar ao banco recém-criado
+
+-- Criar tabela de coleções
+CREATE TABLE tbl_collections (
+    id SERIAL PRIMARY KEY,
+    collectionSetName VARCHAR(150) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+-- Criar tabela de tipos
+CREATE TABLE tbl_types (
+    id SERIAL PRIMARY KEY,
+    typeName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Criar tabela de estágios
+CREATE TABLE tbl_stages (
+    id SERIAL PRIMARY KEY,
+    stageName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Criar tabela de cartas
+CREATE TABLE tbl_cards (
+    id SERIAL PRIMARY KEY,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    type_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    CONSTRAINT fk_collection
+        FOREIGN KEY (collection_id)
+        REFERENCES tbl_collections (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_type
+        FOREIGN KEY (type_id)
+        REFERENCES tbl_types (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_stage
+        FOREIGN KEY (stage_id)
+        REFERENCES tbl_stages (id)
+        ON DELETE RESTRICT
+);
+```
+
+---
+
+### ✅ O que este script faz
+- Cria o banco de dados `tcgpokemon_card`.  
+- Define as tabelas `tbl_collections`, `tbl_types`, `tbl_stages` e `tbl_cards`.  
+- Configura as **chaves estrangeiras** para garantir integridade referencial.  
+
+---
+
+👉 Agora você pode rodar os **scripts de INSERT** que já preparei (os 80 registros de cartas + coleções, tipos e estágios) dentro desse banco.  
+
+Quer que eu monte um **script completo de seed** (com todos os `INSERT` já prontos para coleções, tipos, estágios e as 80 cartas) em um único bloco para você executar direto no banco recém-criado?
+
+===
+
+CREATE DATABASE tcgpokemon_card;
+
+
+Entendi, Mirian! O erro que você viu ao tentar criar o banco de dados provavelmente vem do fato de que você está usando o **SQLite Online IDE** (sqliteonline.com). No SQLite, diferente do PostgreSQL ou MySQL, **não existe o comando `CREATE DATABASE`** — você já está sempre conectado a um banco de dados (normalmente um arquivo `.db`).  
+
+### 🔧 Como ajustar para SQLite
+Se você está rodando no SQLite, basta criar as tabelas diretamente, sem criar o banco:
+
+```sql
+-- Criar tabela de coleções
+CREATE TABLE tbl_collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    collectionSetName VARCHAR(150) NOT NULL,
+    releaseDate DATE NOT NULL,
+    totalCardsInCollection INT NOT NULL
+);
+
+-- Criar tabela de tipos
+CREATE TABLE tbl_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    typeName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Criar tabela de estágios
+CREATE TABLE tbl_stages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stageName VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Criar tabela de cartas
+CREATE TABLE tbl_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hp INT,
+    name VARCHAR(100) NOT NULL,
+    information TEXT,
+    attack VARCHAR(100),
+    damage VARCHAR(20),
+    weak VARCHAR(50),
+    resistence VARCHAR(50),
+    retreat VARCHAR(50),
+    cardNumberInCollection INT NOT NULL,
+    collection_id INT NOT NULL,
+    type_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    FOREIGN KEY (collection_id) REFERENCES tbl_collections (id) ON DELETE CASCADE,
+    FOREIGN KEY (type_id) REFERENCES tbl_types (id) ON DELETE RESTRICT,
+    FOREIGN KEY (stage_id) REFERENCES tbl_stages (id) ON DELETE RESTRICT
+);
+```
+
+---
+
+### ✅ Diferenças principais
+- Em SQLite, usamos `INTEGER PRIMARY KEY AUTOINCREMENT` no lugar de `SERIAL`.  
+- Não criamos o banco com `CREATE DATABASE`, apenas as tabelas.  
+- O comando `\c tcgpokemon_card` (do PostgreSQL) não existe em SQLite.  
+
+---
+
+👉 Se você quiser rodar esse mesmo projeto em **PostgreSQL**, aí sim pode usar `CREATE DATABASE tcgpokemon_card;` e depois conectar com `\c tcgpokemon_card`.  
+
+Quer que eu prepare **dois scripts separados** (um para PostgreSQL e outro para SQLite), assim você pode escolher conforme o ambiente em que estiver rodando?
+
+
+=====
+
+Execução do PowerShell
+para leitura de todos os códigos sql
+#Pegar o diretório atual através de uma variável
+$scriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+
+
+#Arquivo saída com todos sql
+
+$outputFile = Join-Path - Path $scriptDirectory -ChildPath "migration.sql"
+
+
+#Verifica se o arquivo já existe, se existir deleta
+if (Test-Path $outputFile) {
+    Remove-Item $outputFile
+}
+
+#Pega Conteúdo dos arquivos
+$sqlFiles = Get-childItem -Path $scriptDirectory - Filter *.sql -File | Sort-Object Name
+
+
+# Concatena Arquivos
+foreach ($file in $sqlFiles){
+  Get-Content $file.FullName | Out-File -Append -FilePath $outputFile
+ "GO" | Out-File -Append -FilePath $outputFile
+}
+
+#Mensagem de Conclusão
+Write-Host "Todos os arquivos foram combinados em $outputFile"
+
+
